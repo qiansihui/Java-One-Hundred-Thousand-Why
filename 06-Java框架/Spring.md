@@ -1,12 +1,43 @@
 # Spring
 
 ## MVC模型概念
+
+M:Model,指数据操作，模型改变将改变视图
+V: View 视图展现
+C: Controller 控制器，接收指令并改变模型。
+
 ## servlet的基本概念
+
+Servlet运行于支持Java的应用服务器中，一般用于响应http请求。
+
 ## servlet的生命周期
+
+1. 创建servlet实例
+2. 调用init方法
+3. 响应客户端get/post请求
+4. 调用destroy方法
+
 ## servlet中定制session的过期时间
+
+defaultSessionTimeOut="3600" 
+
 ## Servlet中的session工作原理 （禁用cookie如何使用session）
+
+浏览器端cookie中保存会话sessionId，再次请求时就能找到会话对应的session。
+禁用cookie的情况，将sessionId放到每次请求的url或请求参数中。
+
 ## filter和listener是什么？有什么区别？servlet、filter、listener：http://www.i3geek.com/archives/870
+
+servlet 流程是短的，url传来之后，就对其进行处理，之后返回或转向到某一自己指定的页面
+filter流程是线性的,它就像是像一个职责链，url传来之后，进行预处理，然后传递给下一个filter继续执行，而servlet 处理之后，不会继续向下传递。其生命周期：init()->doFilter()->destroy()
+监听器Listener，它是实现了javax.servlet.ServletContextListener 接口的服务器端程序，它也是随web应用的启动而启动，只初始化一次，随web应用的停止而销毁。
+主要作用是： 做一些初始化的内容添加工作、设置一些基本的内容、比如一些参数或者是一些固定的对象等等。
+
 ## JSP和Servlet的区别、共同点（JSP的工作原理）。
+
+JSP的本质就是Servlet，JVM只能识别java的类，不能识别JSP的代码,Web容器将JSP的代码编译成JVM能够识别的java类。
+Servlet的应用逻辑是在Java文件中，从Java代码中动态输出HTML，并且完全从表示层中的HTML里分离开来。
+而JSP的情况是Java和HTML可以组合成一个扩展名为.jsp的文件。JSP侧重于视图，Servlet主要用于控制逻辑
 
 ## Spring AOP和IOC 原理，使用？ 具体场景举例？ 如何优化？
 
@@ -110,13 +141,60 @@ Pointcut 决定Advice通知作用于哪一个连接点，基于正则匹配。
 
 ## Spring MVC框架原理，他们都是怎么做url路由的
 
-首先Spring Web容器与 
+web.xml中两项配置，ContextLoaderListener 和 DispatchServlet 提供了在Web容器中对Spring的接口。
+这些接口与Web容器的耦合是通过 ServletContext 实现的，在ServletContext宿主环境中，Spring 通过 ContextLoaderListener初始化建立起IoC容器体系。
+把 DispatchServlet 作为Spring MVC处理web请求的转发器，完成响应http请求的准备。
+使用 HandlerExecutionChain 定义 根据URL映射方式，注册 Handler 和 Interceptor.
+DispatchServlet 会完成HandlerMapping初始化，这里的 Mapping 关系作用是为http请求找到相应的 Controller 控制器。
+Servlet拦截请求并使用 doGet/doPost方法处理，DispatchServlet 通过 doService 方法响应请求。
+根据URL在handlerMapping中获取Handler，通过Handler返回的是 HandlerExecutionChain ， 包含了最终的Controller和拦截器链
+调用handler的handRequest方法和视图呈现的前后都会穿插对拦截器链的调用。
+
 
 ## spring的controller是单例还是多例，怎么保证并发的安全
+
+controller是单例。
+保证并发安全：
+1. 不要在Controller定义成员变量
+2. 如果需要定义非静态成员变量时，通过 @Scope 注解将其设置为非单例类型。
+3. 通过ThreadLocal设置成员变量。
+
 ## BeanFactory 和 ApplicationContext？
+
+BeanFactory为基本的IoC容器，可以获取Bean及相关信息。
+ApplicationContext 继承自 ListableBeanFactory , 同样继承了 BeanFactory 在基础的容器上添加Web相关的特性。
+如通过继承MessageResource接口支持不同信息源，通过继承Resource接口访问资源，通过继承ApplicationPublisher支持应用事件。
+
 ## Spring Bean 的生命周期，如何被管理的？
-## Spring Bean 的加载过程是怎样的？
+
+1. 实例化Bean
+2. 是指对象属性，依赖注入
+3. 检查Aware相关接口并设置相关依赖
+4. BeanPostProcessor 前置处理
+5. 检查是否实现 InitializingBean 调用afterPropertiesSet方法
+6. 检查是否配置自定义的init-method
+7. BeanPostProcessor 后置处理
+8. 检查是否实现 DisposableBean接口，是否配置自定义destroy方法
+
 ## Spring 中用到了那些设计模式？
 
+单例模式，生产Bean
+抽象工厂模式，工厂模式，如BeanFactory
+代理模式，如AOP
+命令模式，如Spring MVC中获取url对应Handler并处理
+模板模式，各种BeanFactory以及ApplicationContext实现
+Tomcat中有很多场景都使用到了外观模式，因为Tomcat中有很多不同的组件，每个组件需要相互通信，但又不能将自己内部数据过多地暴露给其他组件。用外观模式隔离数据是个很好的方法
+策略模式，如url到handlerMapping有很多策略，默认的是url到Bean的映射。
+责任链模式，如Filter何拦截器链
+
 ## 如果要你实现Spring AOP，请问怎么实现？
+
+动态代理
+通知
+切入点
+
 ## 如果要你实现Spring IOC，你会注意哪些问题？
+
+容器
+Bean的创建
+依赖注入
